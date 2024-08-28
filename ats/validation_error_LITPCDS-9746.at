@@ -1,0 +1,8 @@
+litp create -t firewall-node-config -p /ms/configs/fw_config
+litp create -t firewall-rule -p /ms/configs/fw_config/rules/fw_129 -o name=111129 dport=10129 proto=tcp
+
+litp create -t firewall-rule -p /ms/configs/fw_config/rules/fw_29 -o name=11129 dport=10129 proto=tcp
+
+let __err_a --err_message="Position '11129' in the 'OUTPUT' chain conflicts with position '111129' in the 'INPUT' chain on node 'ms1'"
+let __err_b --err_message="Position '111129' in the 'INPUT' chain conflicts with position '11129' in the 'OUTPUT' chain on node 'ms1'"
+assertError __err_a __err_b create_plan

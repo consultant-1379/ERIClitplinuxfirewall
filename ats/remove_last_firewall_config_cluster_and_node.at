@@ -1,0 +1,19 @@
+# Basic 2 node deployment setup
+runLitpScript two-node-std.inc
+
+# Add a firewall configs on cluster
+litp create -p /deployments/site1/clusters/cluster1/configs/fw -t firewall-cluster-config
+litp create -p /deployments/site1/clusters/cluster1/nodes/node1/configs/fw -t firewall-node-config -o drop_all=false
+litp create -p /deployments/site1/clusters/cluster1/nodes/node2/configs/fw -t firewall-node-config
+
+litp create_plan
+litp run_plan
+
+# Remove a node cluster config
+litp remove -p /deployments/site1/clusters/cluster1/nodes/node1/configs/fw
+litp remove -p /deployments/site1/clusters/cluster1/nodes/node2/configs/fw
+litp remove -p /deployments/site1/clusters/cluster1/configs/fw
+
+litp create_plan
+show show_plan
+litp run_plan

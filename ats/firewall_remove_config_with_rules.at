@@ -1,0 +1,21 @@
+# Basic 2 node deployment setup
+runLitpScript two-node-std.inc
+
+# Add a firewall rules on cluster
+litp create -p /deployments/site1/clusters/cluster1/configs/fw -t firewall-cluster-config
+
+# Add a firewall rules on node
+litp create -p /deployments/site1/clusters/cluster1/nodes/node1/configs/fw -t firewall-node-config -o drop_all=false
+litp create -p /deployments/site1/clusters/cluster1/nodes/node1/configs/fw/rules/fw_basetcp -t firewall-rule -o name="001 basetcp" sport="12345"
+
+litp create_plan
+litp run_plan
+
+# remove a config with rules under it
+litp remove -p /deployments/site1/clusters/cluster1/nodes/node1/configs/fw
+
+litp create_plan
+litp run_plan
+
+assertFileContents puppet/node1_firewall_remove_config_with_rules.at.pp /opt/ericsson/nms/litp/etc/puppet/manifests/plugins/node1.pp
+assertFileContents puppet/node2_firewall_remove_config_with_rules.at.pp /opt/ericsson/nms/litp/etc/puppet/manifests/plugins/node2.pp

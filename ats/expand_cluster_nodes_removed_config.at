@@ -1,0 +1,60 @@
+#
+# Standard 2-node cluster model.
+#
+# This is intended to be included in most AT scripts, to provide a basic model to which
+# plugin-specific stuff can be added.
+#
+litp create -t os-profile -p /software/profiles/rhel_6 -o name='sample-profile' path='/profiles/node-iso'
+
+litp create -t system -p /infrastructure/systems/sys1 -o system_name='sys1'
+litp create -t system -p /infrastructure/systems/sys2 -o system_name='sys2'
+
+litp create -t network -p /infrastructure/networking/networks/nodes -o subnet='10.4.23.0/24' litp_management='true' name='nodes'
+
+litp create -t network-interface -p /ms/network_interfaces/if0 -o network_name='nodes' ipaddress='10.4.23.50'
+
+litp create -t storage-profile-base -p /infrastructure/storage/storage_profiles/profile_1
+
+litp create -t deployment -p /deployments/site1
+litp create -t cluster -p /deployments/site1/clusters/cluster1
+litp create -t node -p /deployments/site1/clusters/cluster1/nodes/node1 -o hostname='node1'
+litp create -t node -p /deployments/site1/clusters/cluster1/nodes/node2 -o hostname='node2'
+
+litp inherit -p /deployments/site1/clusters/cluster1/nodes/node1/system -s /infrastructure/systems/sys1
+litp inherit -p /deployments/site1/clusters/cluster1/nodes/node2/system -s /infrastructure/systems/sys2
+
+litp inherit -p /deployments/site1/clusters/cluster1/nodes/node1/os -s /software/profiles/rhel_6
+litp inherit -p /deployments/site1/clusters/cluster1/nodes/node2/os -s /software/profiles/rhel_6
+
+litp inherit -p /deployments/site1/clusters/cluster1/nodes/node1/storage_profile -s /infrastructure/storage/storage_profiles/profile_1
+litp inherit -p /deployments/site1/clusters/cluster1/nodes/node2/storage_profile -s /infrastructure/storage/storage_profiles/profile_1
+
+litp create -t network-interface -p /deployments/site1/clusters/cluster1/nodes/node1/network_interfaces/if0 -o network_name='nodes' ipaddress='10.4.23.51'
+litp create -t network-interface -p /deployments/site1/clusters/cluster1/nodes/node2/network_interfaces/if0 -o ipaddress='10.4.23.52' network_name='nodes'
+
+
+litp create -p /deployments/site1/clusters/cluster1/configs/fw_config_init -t firewall-cluster-config
+litp create -p /deployments/site1/clusters/cluster1/configs/fw_config_init/rules/fw_basetcp1 -t firewall-rule -o name="001 basetcp" dport="22,80,111,443,3000,25151,9999"
+
+litp create -p /deployments/site1/clusters/cluster1/nodes/node1/configs/fw -t firewall-node-config
+litp create -p /deployments/site1/clusters/cluster1/nodes/node1/configs/fw/rules/fw_basetcp1 -t firewall-rule -o name="002 basetcp" dport="22,80,111,443,3000,25151,9999"
+
+litp create -p /deployments/site1/clusters/cluster1/nodes/node2/configs/fw -t firewall-node-config
+litp create -p /deployments/site1/clusters/cluster1/nodes/node2/configs/fw/rules/fw_basetcp1 -t firewall-rule -o name="002 basetcp" dport="22,80,111,443,3000,25151,9999"
+
+litp create_plan
+litp run_plan
+
+litp create -t system               -p /infrastructure/systems/system3 -o system_name='MN3VM'
+litp create -t disk                 -p /infrastructure/systems/system3/disks/disk0 -o name='sda' size='56G' bootable='true' uuid='ATA_VBOX_HARDDISK_VB8de8e3ff-7f043842'
+litp create -t node                 -p /deployments/site1/clusters/cluster1/nodes/node3 -o hostname='node3'
+litp inherit                        -p /deployments/site1/clusters/cluster1/nodes/node3/system -s /infrastructure/systems/system3
+litp inherit                        -p /deployments/site1/clusters/cluster1/nodes/node3/os -s /software/profiles/rhel_6
+litp create -t network-interface -p /deployments/site1/clusters/cluster1/nodes/node3/network_interfaces/if0 -o ipaddress='10.4.23.53' network_name='nodes'
+litp inherit                        -p /deployments/site1/clusters/cluster1/nodes/node3/storage_profile -s /infrastructure/storage/storage_profiles/profile_1
+litp remove -p /deployments/site1/clusters/cluster1/configs/fw_config_init
+litp create_plan
+litp run_plan
+
+assertConfigTask node1 firewalls::rules cluster1_node1_fw_basetcp1 /deployments/site1/clusters/cluster1/configs/fw_config_init/rules/fw_basetcp1 rule3='{"name": "001 basetcp ipv6", "chain": "INPUT", "proto": "tcp", "title": "001_basetcp_ipv6", "dport": ["22", "80", "111", "443", "3000", "25151", "9999"], "state": ["NEW"], "ensure": "absent", "provider": "ip6tables", "action": "accept"}' rule2='{"name": "1001 basetcp ipv4", "chain": "OUTPUT", "proto": "tcp", "title": "1001_basetcp_ipv4", "dport": ["22", "80", "111", "443", "3000", "25151", "9999"], "state": ["NEW"], "ensure": "absent", "provider": "iptables", "action": "accept"}' rule1='{"name": "001 basetcp ipv4", "chain": "INPUT", "proto": "tcp", "title": "001_basetcp_ipv4", "dport": ["22", "80", "111", "443", "3000", "25151", "9999"], "state": ["NEW"], "ensure": "absent", "provider": "iptables", "action": "accept"}' rule4='{"name": "1001 basetcp ipv6", "chain": "OUTPUT", "proto": "tcp", "title": "1001_basetcp_ipv6", "dport": ["22", "80", "111", "443", "3000", "25151", "9999"], "state": ["NEW"], "ensure": "absent", "provider": "ip6tables", "action": "accept"}'
+assertConfigTask node2 firewalls::rules cluster1_node2_fw_basetcp1 /deployments/site1/clusters/cluster1/configs/fw_config_init/rules/fw_basetcp1 rule3='{"name": "001 basetcp ipv6", "chain": "INPUT", "proto": "tcp", "title": "001_basetcp_ipv6", "dport": ["22", "80", "111", "443", "3000", "25151", "9999"], "state": ["NEW"], "ensure": "absent", "provider": "ip6tables", "action": "accept"}' rule2='{"name": "1001 basetcp ipv4", "chain": "OUTPUT", "proto": "tcp", "title": "1001_basetcp_ipv4", "dport": ["22", "80", "111", "443", "3000", "25151", "9999"], "state": ["NEW"], "ensure": "absent", "provider": "iptables", "action": "accept"}' rule1='{"name": "001 basetcp ipv4", "chain": "INPUT", "proto": "tcp", "title": "001_basetcp_ipv4", "dport": ["22", "80", "111", "443", "3000", "25151", "9999"], "state": ["NEW"], "ensure": "absent", "provider": "iptables", "action": "accept"}' rule4='{"name": "1001 basetcp ipv6", "chain": "OUTPUT", "proto": "tcp", "title": "1001_basetcp_ipv6", "dport": ["22", "80", "111", "443", "3000", "25151", "9999"], "state": ["NEW"], "ensure": "absent", "provider": "ip6tables", "action": "accept"}'

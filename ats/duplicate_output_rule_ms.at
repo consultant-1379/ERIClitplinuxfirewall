@@ -1,0 +1,14 @@
+# Basic 2 node deployment setup
+runLitpScript two-node-std.inc
+
+litp create -p /ms/configs/fw -t firewall-node-config
+
+litp create -t firewall-rule -p /ms/configs/fw/rules/fw_dnsudp -o 'name=201 dnsudp' dport=53 proto=udp
+litp create_plan
+litp create -t firewall-rule -p /ms/configs/fw/rules/fw_dnsudp1 -o 'name=201 dnsudp' dport=53 proto=udp
+
+let __err_a --err_vpath=/ms/configs/fw/rules/fw_dnsudp --err_type=ValidationError --err_message="Create plan failed: Position '201' in the firewall chain 'INPUT' is not unique on node 'ms1'"
+let __err_b --err_vpath=/ms/configs/fw/rules/fw_dnsudp1 --err_type=ValidationError --err_message="Create plan failed: Position '201' in the firewall chain 'INPUT' is not unique on node 'ms1'"
+let __err_c --err_vpath=/ms/configs/fw/rules/fw_dnsudp --err_type=ValidationError --err_message="Create plan failed: Position '201' in the firewall chain 'OUTPUT' is not unique on node 'ms1'"
+let __err_d --err_vpath=/ms/configs/fw/rules/fw_dnsudp1 --err_type=ValidationError --err_message="Create plan failed: Position '201' in the firewall chain 'OUTPUT' is not unique on node 'ms1'"
+assertError __err_a __err_b __err_c __err_d create_plan

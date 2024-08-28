@@ -1,0 +1,58 @@
+##Test invalid updates to firewall rule and validation errors
+##Rules 1-57 are in ERIClitplinuxfirewallapi
+##
+
+# Basic 2 node deployment setup
+runLitpScript two-node-std.inc
+
+#Initial config and rule that will be used to run the tests
+litp create -t firewall-cluster-config -p /deployments/site1/clusters/cluster1/configs/fw1
+
+## 3. numbering in the name (chain position) must be unique
+litp create -t firewall-rule -p /deployments/site1/clusters/cluster1/configs/fw1/rules/fw_tc17c_1 -o name="173 test17c 1"
+litp create -t firewall-rule -p /deployments/site1/clusters/cluster1/configs/fw1/rules/fw_tc17c_2 -o name="174 test17c 2"
+
+litp create_plan
+
+let __err_0 --err_type ValidationError --err_message "Create plan failed: Position '173' in the firewall chain 'INPUT' is not unique on cluster 'cluster1'" --err_vpath "/deployments/site1/clusters/cluster1/configs/fw1/rules/fw_tc17c_1"
+let __err_1 --err_type ValidationError --err_message "Create plan failed: Position '173' in the firewall chain 'OUTPUT' is not unique on cluster 'cluster1'" --err_vpath "/deployments/site1/clusters/cluster1/configs/fw1/rules/fw_tc17c_1"
+let __err_2 --err_type ValidationError --err_message "Create plan failed: Position '173' in the firewall chain 'INPUT' is not unique on cluster 'cluster1'" --err_vpath "/deployments/site1/clusters/cluster1/configs/fw1/rules/fw_tc17c_2"
+let __err_3 --err_type ValidationError --err_message "Create plan failed: Position '173' in the firewall chain 'OUTPUT' is not unique on cluster 'cluster1'" --err_vpath "/deployments/site1/clusters/cluster1/configs/fw1/rules/fw_tc17c_2"
+let __err_4 --err_type ValidationError --err_message "Create plan failed: Position '173' in the firewall chain 'INPUT' is not unique on node 'node1'" --err_vpath "/deployments/site1/clusters/cluster1/configs/fw1/rules/fw_tc17c_1"
+let __err_5 --err_type ValidationError --err_message "Create plan failed: Position '173' in the firewall chain 'OUTPUT' is not unique on node 'node1'" --err_vpath "/deployments/site1/clusters/cluster1/configs/fw1/rules/fw_tc17c_1"
+let __err_6 --err_type ValidationError --err_message "Create plan failed: Position '173' in the firewall chain 'INPUT' is not unique on node 'node1'" --err_vpath "/deployments/site1/clusters/cluster1/configs/fw1/rules/fw_tc17c_2"
+let __err_7 --err_type ValidationError --err_message "Create plan failed: Position '173' in the firewall chain 'OUTPUT' is not unique on node 'node1'" --err_vpath "/deployments/site1/clusters/cluster1/configs/fw1/rules/fw_tc17c_2"
+let __err_8 --err_type ValidationError --err_message "Create plan failed: Position '173' in the firewall chain 'INPUT' is not unique on node 'node2'" --err_vpath "/deployments/site1/clusters/cluster1/configs/fw1/rules/fw_tc17c_1"
+let __err_9 --err_type ValidationError --err_message "Create plan failed: Position '173' in the firewall chain 'OUTPUT' is not unique on node 'node2'" --err_vpath "/deployments/site1/clusters/cluster1/configs/fw1/rules/fw_tc17c_1"
+let __err_10 --err_type ValidationError --err_message "Create plan failed: Position '173' in the firewall chain 'INPUT' is not unique on node 'node2'" --err_vpath "/deployments/site1/clusters/cluster1/configs/fw1/rules/fw_tc17c_2"
+let __err_11 --err_type ValidationError --err_message "Create plan failed: Position '173' in the firewall chain 'OUTPUT' is not unique on node 'node2'" --err_vpath "/deployments/site1/clusters/cluster1/configs/fw1/rules/fw_tc17c_2"
+
+# Update rule to have same chain position
+litp update -p /deployments/site1/clusters/cluster1/configs/fw1/rules/fw_tc17c_2 -o name='173 test17c 1'
+assertProperty /deployments/site1/clusters/cluster1/configs/fw1/rules/fw_tc17c_2 -o name='173 test17c 1'
+
+assertError __err_0 __err_1 __err_2 __err_3 __err_4 __err_5 __err_6 __err_7 __err_8 __err_9 __err_10 __err_11 create_plan
+
+# Remove rules
+litp remove -p /deployments/site1/clusters/cluster1/configs/fw1/rules/fw_tc17c_1
+assertNone -p /deployments/site1/clusters/cluster1/configs/fw1/rules/fw_tc17c_1
+
+litp remove -p /deployments/site1/clusters/cluster1/configs/fw1/rules/fw_tc17c_2
+assertNone -p /deployments/site1/clusters/cluster1/configs/fw1/rules/fw_tc17c_2
+
+## x. Cluster level rule and a node level rule cannot have the same chain order
+
+litp create -t firewall-rule -p /deployments/site1/clusters/cluster1/configs/fw1/rules/fw0024 -o name="176 test17"
+
+litp create -t firewall-node-config -p /deployments/site1/clusters/cluster1/nodes/node1/configs/mynodefwconfig/
+litp create -t firewall-rule -p /deployments/site1/clusters/cluster1/nodes/node1/configs/mynodefwconfig/rules/fw0025 -o name="178 test17"
+
+# Update so rules have same chain position
+litp update -p /deployments/site1/clusters/cluster1/nodes/node1/configs/mynodefwconfig/rules/fw0025 -o name="176 test17"
+assertProperty /deployments/site1/clusters/cluster1/nodes/node1/configs/mynodefwconfig/rules/fw0025 -o name="176 test17"
+
+let __err_0 --err_type ValidationError --err_message "Create plan failed: Position '176' in the firewall chain 'INPUT' is not unique on node 'node1'" --err_vpath "/deployments/site1/clusters/cluster1/configs/fw1/rules/fw0024"
+let __err_1 --err_type ValidationError --err_message "Create plan failed: Position '176' in the firewall chain 'OUTPUT' is not unique on node 'node1'" --err_vpath "/deployments/site1/clusters/cluster1/configs/fw1/rules/fw0024"
+let __err_2 --err_type ValidationError --err_message "Create plan failed: Position '176' in the firewall chain 'INPUT' is not unique on node 'node1'" --err_vpath "/deployments/site1/clusters/cluster1/nodes/node1/configs/mynodefwconfig/rules/fw0025"
+let __err_3 --err_type ValidationError --err_message "Create plan failed: Position '176' in the firewall chain 'OUTPUT' is not unique on node 'node1'" --err_vpath "/deployments/site1/clusters/cluster1/nodes/node1/configs/mynodefwconfig/rules/fw0025"
+assertError __err_0 __err_1 __err_2 __err_3 create_plan

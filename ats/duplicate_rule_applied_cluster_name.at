@@ -1,0 +1,12 @@
+# Basic 2 node deployment setup
+runLitpScript two-node-std.inc
+litp create -p /deployments/site1/clusters/cluster1/configs/fw -t firewall-cluster-config
+litp create_plan
+litp run_plan
+
+# Add a duplicate firewall rules on cluster
+litp create -p /deployments/site1/clusters/cluster1/configs/fw/rules/fw_basetcp1 -t firewall-rule -o name="2222 basetcp" dport="22,80,111,443,3000,25151,9999"
+litp create -p /deployments/site1/clusters/cluster1/configs/fw/rules/fw_basetcp2 -t firewall-rule -o name="22222 basetcp" dport="22,80,111,443,3000,25151,9999"
+litp create_plan
+show show_plan
+litp run_plan

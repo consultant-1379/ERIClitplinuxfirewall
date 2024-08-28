@@ -1,0 +1,9 @@
+# Basic 2 node deployment setup
+runLitpScript two-node-std.inc
+
+# Add a duplicate firewall rules on node1 and cluster
+litp create -p /deployments/site1/clusters/cluster1/nodes/node1/configs/fw -t firewall-node-config
+litp create -p /deployments/site1/clusters/cluster1/nodes/node1/configs/fw/rules/fw_basetcp1 -t firewall-rule -o name="111 action and jump" log_level=info jump=log action=drop
+
+assertError create_plan
+assertErrorMessage "Create plan failed: Rule may not contain both 'action' and 'jump' properties" create_plan

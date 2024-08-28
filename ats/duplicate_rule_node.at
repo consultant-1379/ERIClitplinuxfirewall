@@ -1,0 +1,14 @@
+# Basic 2 node deployment setup
+runLitpScript two-node-std.inc
+
+# Add a duplicate firewall rules on d node1
+litp create -p /ms/configs/fw -t firewall-node-config
+litp create -p /ms/configs/fw/rules/fw_basetcp1 -t firewall-rule -o name="001 basetcp" dport="22,80,111,443,3000,25151,9999"
+
+litp create -p /deployments/site1/clusters/cluster1/nodes/node1/configs/fw -t firewall-node-config
+litp create -p /deployments/site1/clusters/cluster1/nodes/node1/configs/fw/rules/fw_basetcp1 -t firewall-rule -o name="001 basetcp" dport="22,80,111,443,3000,25151,9999"
+litp create -p /deployments/site1/clusters/cluster1/nodes/node1/configs/fw/rules/fw_basetcp2 -t firewall-rule -o name="001 basetcp" dport="22,80,111,443,3000,25151,9999"
+
+let __err_a --err_message="Create plan failed: Position '1' in the firewall chain 'INPUT' is not unique on node 'node1'"
+let __err_b --err_message="Create plan failed: Position '1' in the firewall chain 'OUTPUT' is not unique on node 'node1'"
+assertError __err_a __err_b create_plan

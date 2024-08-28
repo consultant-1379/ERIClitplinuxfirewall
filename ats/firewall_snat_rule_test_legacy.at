@@ -1,0 +1,16 @@
+# Basic 2 node deployment setup
+runLitpScript two-node-std.inc
+
+# Add firewall rules - legacy test
+litp create -t firewall-node-config -p /deployments/site1/clusters/cluster1/nodes/node1/configs/fw2
+litp create -t firewall-rule -p /deployments/site1/clusters/cluster1/nodes/node1/configs/fw2/rules/fw_validSNATNodeLevel2 -o provider=iptables name="904 SNAT" jump="CONNMARK" chain="INPUT"  source="10.247.244.0/22" destination="10.140.1.0/24" proto=udp table=nat
+litp create -t firewall-rule -p /deployments/site1/clusters/cluster1/nodes/node1/configs/fw2/rules/fw_validSNATNodeLevel3 -o provider=ip6tables name="903 SNAT" jump="CONNMARK" chain="INPUT"  source="0:0:0:0:0:ffff:a8c:58eb" destination="0:0:0:0:0:ffff:a8c:5800" proto=tcp table=nat
+
+litp create -t firewall-rule -p /deployments/site1/clusters/cluster1/nodes/node1/configs/fw2/rules/fw_validSNATNodeLevel4 -o provider=iptables name="905 SNAT" jump="REJECT" chain="OUTPUT"  source="10.247.244.0/22" destination="10.140.1.0/24" proto=all table=nat
+litp create -t firewall-rule -p /deployments/site1/clusters/cluster1/nodes/node1/configs/fw2/rules/fw_validSNATNodeLevel5 -o provider=ip6tables name="906 SNAT" jump="REJECT" chain="OUTPUT"  source="0:0:0:0:0:ffff:a8c:58eb" destination="0:0:0:0:0:ffff:a8c:5800" proto=all table=nat
+
+litp create -t firewall-rule -p /deployments/site1/clusters/cluster1/nodes/node1/configs/fw2/rules/fw_validSNATNodeLevel6 -o provider=iptables name="907 SNAT" jump="ACCEPT" chain="OUTPUT" proto=icmp
+litp create -t firewall-rule -p /deployments/site1/clusters/cluster1/nodes/node1/configs/fw2/rules/fw_validSNATNodeLevel7 -o provider=ip6tables name="908 SNAT" jump="ACCEPT" chain="OUTPUT" proto=icmp
+
+litp create_plan
+litp run_plan

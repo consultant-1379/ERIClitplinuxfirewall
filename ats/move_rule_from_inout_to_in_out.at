@@ -1,0 +1,18 @@
+# Basic 2 node deployment setup
+runLitpScript two-node-std.inc
+
+# Add a duplicate firewall rules on ms
+litp create -p /ms/configs/fw -t firewall-node-config
+litp create -p /ms/configs/fw/rules/fw_in -t firewall-rule -o name="001 basetcp" chain=INPUT dport="22,80,111,443,3000,25151,9999"
+litp create -p /ms/configs/fw/rules/fw_out -t firewall-rule -o name="001 basetcp" chain=OUTPUT dport="22,80,111,443,3000,25151,9999"
+litp create_plan
+litp run_plan
+litp remove -p /ms/configs/fw/rules/fw_in
+litp remove -p /ms/configs/fw/rules/fw_out
+litp create -p /ms/configs/fw/rules/fw_both -t firewall-rule -o name="001 basetcp new" dport="22,80,111,443,3000,25151,9999"
+litp create_plan
+litp run_plan
+litp create -p /deployments/site1/clusters/cluster1/nodes/node2/configs/fw -t firewall-node-config
+litp create -p /deployments/site1/clusters/cluster1/nodes/node2/configs/fw/rules/fw_in -t firewall-rule -o name="001 basetcp" chain=INPUT dport="22,80,111,443,3000,25151,9999"
+litp create -p /deployments/site1/clusters/cluster1/nodes/node2/configs/fw/rules/fw_out -t firewall-rule -o name="001 basetcp" chain=OUTPUT dport="22,80,111,443,3000,25151,9999"
+litp create_plan

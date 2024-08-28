@@ -1,0 +1,64 @@
+##Test to verify that user can export/load firewall
+##rules with new properties STRING and ALGO and with supported negation
+##of SOURCE property and action=REJECT. Check that user can export/load
+##rules with state=none(TORF-214102)
+##
+
+# Basic 2 node deployment
+runLitpScript two-node-std.inc
+
+litp create -t firewall-cluster-config -p /deployments/site1/clusters/cluster1/configs/fw
+litp create -t firewall-node-config -p /deployments/site1/clusters/cluster1/nodes/node1/configs/fw2
+
+## 1. Create rules for test
+litp create -t firewall-rule -p /deployments/site1/clusters/cluster1/nodes/node1/configs/fw2/rules/fw_200553_1 -o name="032 test1" dport=9200 proto=tcp provider=iptables source="!192.168.0.0/20" string="test" algo=bm
+assertState -p /deployments/site1/clusters/cluster1/nodes/node1/configs/fw2/rules/fw_200553_1 Initial
+
+litp create -t firewall-rule -p /deployments/site1/clusters/cluster1/nodes/node1/configs/fw2/rules/fw_200553_2 -o name="034 test1" dport=9200 proto=tcp provider=iptables source="!192.168.0.55" string="test" algo=kmp action=reject
+assertState -p /deployments/site1/clusters/cluster1/nodes/node1/configs/fw2/rules/fw_200553_2 Initial
+
+litp create -t firewall-rule -p /deployments/site1/clusters/cluster1/nodes/node1/configs/fw2/rules/fw_214102_1 -o name="090 test" sport=110 dport=9200 state=none
+assertState -p /deployments/site1/clusters/cluster1/nodes/node1/configs/fw2/rules/fw_214102_1 Initial
+
+# Creation of cluster level rule to ensure export of node rules are unaffected
+litp create -t firewall-rule -p /deployments/site1/clusters/cluster1/configs/fw/rules/fw_test -o name="1234 test" algo="kmp" string="1234 test"
+
+## 2. Export rules and validate xml
+litp export -p /deployments/site1/clusters/cluster1/nodes/node1/configs/fw2/rules/fw_200553_1 -f /tmp/xml_exported_200553_1.xml
+assertFileContents xml/xml_node_fw_rules_1_story200553.xml /tmp/xml_exported_200553_1.xml
+
+litp export -p /deployments/site1/clusters/cluster1/nodes/node1/configs/fw2/rules/fw_200553_2 -f /tmp/xml_exported_200553_2.xml
+assertFileContents xml/xml_node_fw_rules_2_story200553.xml /tmp/xml_exported_200553_2.xml
+
+litp export -p /deployments/site1/clusters/cluster1/nodes/node1/configs/fw2/rules/fw_214102_1 -f /tmp/xml_exported_214102.xml
+assertFileContents xml/xml_node_fw_rules_3_story214102.xml /tmp/xml_exported_214102.xml
+
+## 3. Remove rules
+litp remove -p /deployments/site1/clusters/cluster1/nodes/node1/configs/fw2/rules/fw_200553_1
+assertNone -p /deployments/site1/clusters/cluster1/nodes/node1/configs/fw2/rules/fw_200553_1
+
+litp remove -p /deployments/site1/clusters/cluster1/nodes/node1/configs/fw2/rules/fw_200553_2
+assertNone -p /deployments/site1/clusters/cluster1/nodes/node1/configs/fw2/rules/fw_200553_2
+
+litp remove -p /deployments/site1/clusters/cluster1/nodes/node1/configs/fw2/rules/fw_214102_1
+assertNone -p /deployments/site1/clusters/cluster1/nodes/node1/configs/fw2/rules/fw_214102_1
+
+## 4. Load rules
+litp load -p /deployments/site1/clusters/cluster1/nodes/node1/configs/fw2/rules/ -f /tmp/xml_exported_200553_1.xml
+assertState -p /deployments/site1/clusters/cluster1/nodes/node1/configs/fw2/rules/fw_200553_1 Initial
+
+litp load -p /deployments/site1/clusters/cluster1/nodes/node1/configs/fw2/rules/ -f /tmp/xml_exported_200553_2.xml
+assertState -p /deployments/site1/clusters/cluster1/nodes/node1/configs/fw2/rules/fw_200553_2 Initial
+
+litp load -p /deployments/site1/clusters/cluster1/nodes/node1/configs/fw2/rules/ -f /tmp/xml_exported_214102.xml
+assertState -p /deployments/site1/clusters/cluster1/nodes/node1/configs/fw2/rules/fw_214102_1 Initial
+
+## 5. Create and run plan
+litp create_plan
+litp run_plan
+assertPlanState successful
+
+## 6. Verify rules have been applied
+assertState -p /deployments/site1/clusters/cluster1/nodes/node1/configs/fw2/rules/fw_200553_1 Applied
+assertState -p /deployments/site1/clusters/cluster1/nodes/node1/configs/fw2/rules/fw_200553_2 Applied
+assertState -p /deployments/site1/clusters/cluster1/nodes/node1/configs/fw2/rules/fw_214102_1 Applied

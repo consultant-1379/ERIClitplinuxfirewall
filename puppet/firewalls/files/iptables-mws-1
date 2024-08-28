@@ -1,0 +1,60 @@
+#Drop anything we are not explicitly allowing.
+*filter
+-F INPUT
+-F OUTPUT
+-F FORWARD
+:INPUT DROP [0:0]
+:FORWARD DROP [0:0]
+:OUTPUT DROP [0:0]
+
+-A INPUT -i lo -j ACCEPT
+-A OUTPUT -o lo -j ACCEPT
+-I FORWARD -m physdev --physdev-is-bridged -j ACCEPT
+
+-A INPUT -m state --state NEW -m tcp -p tcp --dport 22 -j ACCEPT
+-A INPUT -m state --state NEW -m tcp -p tcp --dport 80 -j ACCEPT
+-A INPUT -m state --state NEW -m tcp -p tcp --dport 111 -j ACCEPT
+-A INPUT -m state --state NEW -m tcp -p tcp --dport 892 -j ACCEPT
+-A INPUT -m state --state NEW -m tcp -p tcp --dport 2049 -j ACCEPT
+-A INPUT -m state --state NEW -m tcp -p tcp --dport 3000 -j ACCEPT
+-A INPUT -m state --state NEW -m tcp -p tcp --dport 8140 -j ACCEPT
+-A INPUT -m state --state NEW -m tcp -p tcp --dport 25151 -j ACCEPT
+-A INPUT -m state --state NEW -m udp -p udp --dport 67 -j ACCEPT
+-A INPUT -m state --state NEW -m udp -p udp --dport 69 -j ACCEPT
+-A INPUT -m state --state NEW -m udp -p udp --dport 111 -j ACCEPT
+-A INPUT -m state --state NEW -m udp -p udp --dport 123 -j ACCEPT
+-A INPUT -m state --state NEW -m udp -p udp --dport 892 -j ACCEPT
+-A INPUT -m state --state NEW -m udp -p udp --dport 25251 -j ACCEPT
+-A INPUT -m state --state NEW -m tcp -p tcp --dport 57006 -j ACCEPT
+-A INPUT -m state --state NEW -m tcp -p tcp --dport 57004 -j ACCEPT
+-A INPUT -m state --state NEW -m tcp -p tcp --dport 57005 -j ACCEPT
+-A OUTPUT -m state --state NEW -m tcp -p tcp --dport 22 -j ACCEPT
+-A OUTPUT -m state --state NEW -m tcp -p tcp --dport 80 -j ACCEPT
+-A OUTPUT -m state --state NEW -m tcp -p tcp --dport 111 -j ACCEPT
+-A OUTPUT -m state --state NEW -m tcp -p tcp --dport 892 -j ACCEPT
+-A OUTPUT -m state --state NEW -m tcp -p tcp --dport 2049 -j ACCEPT
+-A OUTPUT -m state --state NEW -m tcp -p tcp --dport 3000 -j ACCEPT
+-A OUTPUT -m state --state NEW -m tcp -p tcp --dport 8140 -j ACCEPT
+-A OUTPUT -m state --state NEW -m tcp -p tcp --dport 25151 -j ACCEPT
+-A OUTPUT -m state --state NEW -m udp -p udp --dport 67 -j ACCEPT
+-A OUTPUT -m state --state NEW -m udp -p udp --dport 69 -j ACCEPT
+-A OUTPUT -m state --state NEW -m udp -p udp --dport 111 -j ACCEPT
+-A OUTPUT -m state --state NEW -m udp -p udp --dport 123 -j ACCEPT
+-A OUTPUT -m state --state NEW -m udp -p udp --dport 892 -j ACCEPT
+-A OUTPUT -m state --state NEW -m udp -p udp --dport 25251 -j ACCEPT
+-A OUTPUT -m state --state NEW -m tcp -p tcp --dport 57006 -j ACCEPT
+-A OUTPUT -m state --state NEW -m tcp -p tcp --dport 57004 -j ACCEPT
+-A OUTPUT -m state --state NEW -m tcp -p tcp --dport 57005 -j ACCEPT
+
+-A INPUT -p icmp -j ACCEPT
+-A OUTPUT -p icmp -j ACCEPT
+
+# Accept established traffic
+-A INPUT -m state --state ESTABLISHED,RELATED -j ACCEPT
+-A OUTPUT -m state --state ESTABLISHED,RELATED -j ACCEPT
+
+#Log and drop everything else
+-A INPUT -j LOG --log-level 4 --log-prefix "IPTABLES_DROPPED_PACKET"
+-A OUTPUT -j LOG
+-A INPUT -j DROP
+COMMIT

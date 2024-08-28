@@ -1,0 +1,14 @@
+# Basic 2 node deployment setup
+runLitpScript two-node-std.inc
+
+# Add a duplicate firewall rules on ms
+litp create -p /ms/configs/fw -t firewall-node-config
+litp create -p /ms/configs/fw/rules/fw_fw1 -t firewall-rule -o name="001 forward" chain=FORWARD dport="56"
+litp create -p /ms/configs/fw/rules/fw_basetcp1 -t firewall-rule -o name="001 basetcp" dport="22,80,111,443,3000,25151,9999"
+
+litp create_plan
+
+litp create -p /ms/configs/fw/rules/fw_fw2 -t firewall-rule -o name="001 backward" chain=FORWARD dport="57"
+let __err_a --err_vpath=/ms/configs/fw/rules/fw_fw1 --err_message="Create plan failed: Position '1' in the firewall chain 'FORWARD' is not unique on node 'ms1'"
+let __err_b --err_vpath=/ms/configs/fw/rules/fw_fw2 --err_message="Create plan failed: Position '1' in the firewall chain 'FORWARD' is not unique on node 'ms1'"
+assertError --errors_length 2 __err_a __err_b create_plan

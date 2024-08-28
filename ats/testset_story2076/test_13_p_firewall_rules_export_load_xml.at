@@ -1,0 +1,68 @@
+##Verify firewall rules can be exported and loaded
+##
+
+# Basic 2 node deployment setup
+runLitpScript two-node-std.inc
+
+## 1. Export initial configs
+litp export -p /deployments/site1/clusters/cluster1/configs -f /tmp/xml_13_c1config_story2075.xml
+litp export -p /deployments/site1/clusters/cluster1/nodes/node1/configs -f /tmp/xml_13_n1config_story2075.xml
+
+# Create initial configs
+litp create -t firewall-cluster-config -p /deployments/site1/clusters/cluster1/configs/fw1
+litp create -t firewall-node-config -p /deployments/site1/clusters/cluster1/nodes/node1/configs/fw2
+
+## 2. Create rules in initial configs
+litp create -t firewall-rule -p /deployments/site1/clusters/cluster1/configs/fw1/rules/fw001 -o name="131 test13" dport="25152,25153"
+assertState -p /deployments/site1/clusters/cluster1/configs/fw1/rules/fw001 Initial
+
+litp create -t firewall-rule -p /deployments/site1/clusters/cluster1/nodes/node1/configs/fw2/rules/fw002 -o name="132 test13" dport="4001,4045"
+assertState -p /deployments/site1/clusters/cluster1/nodes/node1/configs/fw2/rules/fw002 Initial
+
+## 3. Export configs and rules
+litp export -p /deployments/site1/clusters/cluster1/configs/fw1 -f /tmp/xml_13a_story2075.xml
+litp export -p /deployments/site1/clusters/cluster1/nodes/node1/configs/fw2 -f /tmp/xml_13b_story2075.xml
+litp export -p /deployments/site1/clusters/cluster1/configs/fw1/rules/fw001 -f /tmp/xml_13c_story2075.xml
+litp export -p /deployments/site1/clusters/cluster1/nodes/node1/configs/fw2/rules/fw002 -f /tmp/xml_13d_story2075.xml
+
+## 4. Remove rules and configs
+litp remove -p /deployments/site1/clusters/cluster1/configs/fw1/rules/fw001
+assertNone -p /deployments/site1/clusters/cluster1/configs/fw1/rules/fw001
+
+litp remove -p /deployments/site1/clusters/cluster1/configs/fw1
+assertNone -p /deployments/site1/clusters/cluster1/configs/fw1
+
+litp remove -p /deployments/site1/clusters/cluster1/nodes/node1/configs/fw2/rules/fw002
+assertNone -p /deployments/site1/clusters/cluster1/nodes/node1/configs/fw2/rules/fw002
+
+litp remove -p /deployments/site1/clusters/cluster1/nodes/node1/configs/fw2
+assertNone -p /deployments/site1/clusters/cluster1/nodes/node1/configs/fw2
+
+## 5. Load exported rules and configs
+litp load -p /deployments/site1/clusters/cluster1/configs -f /tmp/xml_13a_story2075.xml --replace
+assertState -p /deployments/site1/clusters/cluster1/configs/fw1 Initial
+
+litp load -p /deployments/site1/clusters/cluster1/configs/fw1/rules/ -f /tmp/xml_13c_story2075.xml --merge
+assertState -p /deployments/site1/clusters/cluster1/configs/fw1/rules/fw001 Initial
+
+litp load -p /deployments/site1/clusters/cluster1/nodes/node1/configs/ -f /tmp/xml_13b_story2075.xml --replace
+assertState -p /deployments/site1/clusters/cluster1/nodes/node1/configs/fw2 Initial
+
+litp load -p /deployments/site1/clusters/cluster1/nodes/node1/configs/fw2/rules/ -f /tmp/xml_13d_story2075.xml --replace
+assertState -p /deployments/site1/clusters/cluster1/nodes/node1/configs/fw2/rules/fw002 Initial
+
+## 6. Create plan
+litp create_plan
+
+assertPlanState initial
+
+## 7. Load initial configs
+# This tests overwriting what was loaded in step 5
+litp load -p /deployments/site1/clusters/cluster1 -f /tmp/xml_13_c1config_story2075.xml --replace
+assertNone -p /deployments/site1/clusters/cluster1/configs/fw1
+
+litp load -p /deployments/site1/clusters/cluster1/nodes/node1 -f /tmp/xml_13_n1config_story2075.xml --replace
+assertNone -p /deployments/site1/clusters/cluster1/nodes/node1/configs/fw2
+
+## 8. Create plan
+assertError create_plan --err_type "DoNothingPlanError" --err_message "Create plan failed: no tasks were generated"

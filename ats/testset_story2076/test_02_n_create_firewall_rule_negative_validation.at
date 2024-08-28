@@ -1,0 +1,73 @@
+##Test validation errors at "create_plan"
+##Rules 1-57 are in ERIClitplinuxfirewallapi
+##
+
+# Basic 2 node deployment setup
+runLitpScript two-node-std.inc
+
+litp create -t firewall-cluster-config -p /deployments/site1/clusters/cluster1/configs/fw1
+litp create -t firewall-node-config -p /deployments/site1/clusters/cluster1/nodes/node1/configs/fw2
+
+# 58. Numbering in the name (chain position) must be unique
+litp create -t firewall-rule -p /deployments/site1/clusters/cluster1/configs/fw1/rules/fw0021 -o name='010 elias'
+litp create -t firewall-rule -p /deployments/site1/clusters/cluster1/configs/fw1/rules/fw0022 -o name='010 job'
+litp create -t firewall-rule -p /deployments/site1/clusters/cluster1/configs/fw1/rules/fw0023 -o name='10 elias'
+
+let __err_0 --err_type ValidationError --err_message "Create plan failed: Position '10' in the firewall chain 'INPUT' is not unique on cluster 'cluster1'" --err_vpath "/deployments/site1/clusters/cluster1/configs/fw1/rules/fw0021"
+let __err_1 --err_type ValidationError --err_message "Create plan failed: Position '10' in the firewall chain 'INPUT' is not unique on cluster 'cluster1'" --err_vpath "/deployments/site1/clusters/cluster1/configs/fw1/rules/fw0022"
+let __err_2 --err_type ValidationError --err_message "Create plan failed: Position '10' in the firewall chain 'INPUT' is not unique on cluster 'cluster1'" --err_vpath "/deployments/site1/clusters/cluster1/configs/fw1/rules/fw0023"
+let __err_3 --err_type ValidationError --err_message "Create plan failed: Position '10' in the firewall chain 'OUTPUT' is not unique on cluster 'cluster1'" --err_vpath "/deployments/site1/clusters/cluster1/configs/fw1/rules/fw0021"
+let __err_4 --err_type ValidationError --err_message "Create plan failed: Position '10' in the firewall chain 'OUTPUT' is not unique on cluster 'cluster1'" --err_vpath "/deployments/site1/clusters/cluster1/configs/fw1/rules/fw0022"
+let __err_5 --err_type ValidationError --err_message "Create plan failed: Position '10' in the firewall chain 'OUTPUT' is not unique on cluster 'cluster1'" --err_vpath "/deployments/site1/clusters/cluster1/configs/fw1/rules/fw0023"
+let __err_6 --err_type ValidationError --err_message "Create plan failed: Position '10' in the firewall chain 'INPUT' is not unique on node 'node1'" --err_vpath "/deployments/site1/clusters/cluster1/configs/fw1/rules/fw0021"
+let __err_7 --err_type ValidationError --err_message "Create plan failed: Position '10' in the firewall chain 'INPUT' is not unique on node 'node1'" --err_vpath "/deployments/site1/clusters/cluster1/configs/fw1/rules/fw0022"
+let __err_8 --err_type ValidationError --err_message "Create plan failed: Position '10' in the firewall chain 'INPUT' is not unique on node 'node1'" --err_vpath "/deployments/site1/clusters/cluster1/configs/fw1/rules/fw0023"
+let __err_9 --err_type ValidationError --err_message "Create plan failed: Position '10' in the firewall chain 'OUTPUT' is not unique on node 'node1'" --err_vpath "/deployments/site1/clusters/cluster1/configs/fw1/rules/fw0021"
+let __err_10 --err_type ValidationError --err_message "Create plan failed: Position '10' in the firewall chain 'OUTPUT' is not unique on node 'node1'" --err_vpath "/deployments/site1/clusters/cluster1/configs/fw1/rules/fw0022"
+let __err_11 --err_type ValidationError --err_message "Create plan failed: Position '10' in the firewall chain 'OUTPUT' is not unique on node 'node1'" --err_vpath "/deployments/site1/clusters/cluster1/configs/fw1/rules/fw0023"
+let __err_12 --err_type ValidationError --err_message "Create plan failed: Position '10' in the firewall chain 'INPUT' is not unique on node 'node2'" --err_vpath "/deployments/site1/clusters/cluster1/configs/fw1/rules/fw0021"
+let __err_13 --err_type ValidationError --err_message "Create plan failed: Position '10' in the firewall chain 'INPUT' is not unique on node 'node2'" --err_vpath "/deployments/site1/clusters/cluster1/configs/fw1/rules/fw0022"
+let __err_14 --err_type ValidationError --err_message "Create plan failed: Position '10' in the firewall chain 'INPUT' is not unique on node 'node2'" --err_vpath "/deployments/site1/clusters/cluster1/configs/fw1/rules/fw0023"
+let __err_15 --err_type ValidationError --err_message "Create plan failed: Position '10' in the firewall chain 'OUTPUT' is not unique on node 'node2'" --err_vpath "/deployments/site1/clusters/cluster1/configs/fw1/rules/fw0021"
+let __err_16 --err_type ValidationError --err_message "Create plan failed: Position '10' in the firewall chain 'OUTPUT' is not unique on node 'node2'" --err_vpath "/deployments/site1/clusters/cluster1/configs/fw1/rules/fw0022"
+let __err_17 --err_type ValidationError --err_message "Create plan failed: Position '10' in the firewall chain 'OUTPUT' is not unique on node 'node2'" --err_vpath "/deployments/site1/clusters/cluster1/configs/fw1/rules/fw0023"
+assertError __err_0 __err_1 __err_2 __err_3 __err_4 __err_5 __err_6 __err_7 __err_8 __err_9 __err_10 __err_11 __err_12 __err_13 __err_14 __err_15 __err_16 __err_17 create_plan
+
+litp remove -p /deployments/site1/clusters/cluster1/configs/fw1/rules/fw0021
+assertNone -p /deployments/site1/clusters/cluster1/configs/fw1/rules/fw0021
+
+litp remove -p /deployments/site1/clusters/cluster1/configs/fw1/rules/fw0022
+assertNone -p /deployments/site1/clusters/cluster1/configs/fw1/rules/fw0022
+
+litp remove -p /deployments/site1/clusters/cluster1/configs/fw1/rules/fw0023
+assertNone -p /deployments/site1/clusters/cluster1/configs/fw1/rules/fw0023
+
+# 59. Cluster level rule and a node level rule cannot have the same chain order
+litp create -t firewall-rule -p /deployments/site1/clusters/cluster1/configs/fw1/rules/fw0024 -o name='252 cluster rule'
+litp create -t firewall-rule -p /deployments/site1/clusters/cluster1/nodes/node1/configs/fw2/rules/fw0025 -o name='252 node rule'
+
+let __err_0 --err_type ValidationError --err_message "Create plan failed: Position '252' in the firewall chain 'OUTPUT' is not unique on node 'node1'" --err_vpath "/deployments/site1/clusters/cluster1/configs/fw1/rules/fw0024"
+let __err_1 --err_type ValidationError --err_message "Create plan failed: Position '252' in the firewall chain 'INPUT' is not unique on node 'node1'" --err_vpath "/deployments/site1/clusters/cluster1/configs/fw1/rules/fw0024"
+let __err_2 --err_type ValidationError --err_message "Create plan failed: Position '252' in the firewall chain 'OUTPUT' is not unique on node 'node1'" --err_vpath "/deployments/site1/clusters/cluster1/nodes/node1/configs/fw2/rules/fw0025"
+let __err_3 --err_type ValidationError --err_message "Create plan failed: Position '252' in the firewall chain 'INPUT' is not unique on node 'node1'" --err_vpath "/deployments/site1/clusters/cluster1/nodes/node1/configs/fw2/rules/fw0025"
+
+assertError __err_0 __err_1 __err_2 __err_3 create_plan
+
+# 60. Scenario described by Bug LITPCDS-9746
+litp remove -p /deployments/site1/clusters/cluster1/configs/fw1/rules/fw0024
+assertNone -p /deployments/site1/clusters/cluster1/configs/fw1/rules/fw0024
+
+litp remove -p /deployments/site1/clusters/cluster1/nodes/node1/configs/fw2/rules/fw0025
+assertNone -p /deployments/site1/clusters/cluster1/nodes/node1/configs/fw2/rules/fw0025
+
+litp create -t firewall-rule -p /deployments/site1/clusters/cluster1/configs/fw1/rules/fw0026 -o name='11119 my rule'
+litp create -t firewall-rule -p /deployments/site1/clusters/cluster1/configs/fw1/rules/fw0027 -o name='111119 my rule'
+
+let __err_0 --err_type ValidationError --err_message "Create plan failed: Position '11119' in the 'OUTPUT' chain conflicts with position '111119' in the 'INPUT' chain on node 'node1'" --err_vpath "/deployments/site1/clusters/cluster1/configs/fw1/rules/fw0026"
+let __err_1 --err_type ValidationError --err_message "Create plan failed: Position '111119' in the 'INPUT' chain conflicts with position '11119' in the 'OUTPUT' chain on node 'node1'" --err_vpath "/deployments/site1/clusters/cluster1/configs/fw1/rules/fw0027"
+let __err_2 --err_type ValidationError --err_message "Create plan failed: Position '11119' in the 'OUTPUT' chain conflicts with position '111119' in the 'INPUT' chain on node 'node2'" --err_vpath "/deployments/site1/clusters/cluster1/configs/fw1/rules/fw0026"
+let __err_3 --err_type ValidationError --err_message "Create plan failed: Position '111119' in the 'INPUT' chain conflicts with position '11119' in the 'OUTPUT' chain on node 'node2'" --err_vpath "/deployments/site1/clusters/cluster1/configs/fw1/rules/fw0027"
+let __err_4 --err_type ValidationError --err_message "Create plan failed: Position '11119' in the 'OUTPUT' chain conflicts with position '111119' in the 'INPUT' chain on cluster 'cluster1'" --err_vpath "/deployments/site1/clusters/cluster1/configs/fw1/rules/fw0026"
+let __err_5 --err_type ValidationError --err_message "Create plan failed: Position '111119' in the 'INPUT' chain conflicts with position '11119' in the 'OUTPUT' chain on cluster 'cluster1'" --err_vpath "/deployments/site1/clusters/cluster1/configs/fw1/rules/fw0027"
+
+assertError __err_0 __err_1 __err_2 __err_3 __err_4 __err_5 create_plan

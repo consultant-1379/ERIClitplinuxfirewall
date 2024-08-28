@@ -1,0 +1,12 @@
+# Basic 2 node deployment setup
+runLitpScript two-node-std.inc
+
+# Add firewall rules on node1 and cluster level
+litp create -p /deployments/site1/clusters/cluster1/nodes/node1/configs/fw1 -t firewall-node-config
+litp create -p /deployments/site1/clusters/cluster1/nodes/node1/configs/fw2 -t firewall-node-config -o drop_all=false
+assertErrorMessage "Only one 'firewall-node-config' may be configured per node" create_plan
+
+litp create -p /deployments/site1/clusters/cluster1/configs/fw1 -t firewall-cluster-config
+litp create -p /deployments/site1/clusters/cluster1/configs/fw2 -t firewall-cluster-config -o drop_all=false
+assertErrorMessage "Only one 'firewall-cluster-config' may be configured per cluster" create_plan
+

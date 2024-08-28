@@ -1,0 +1,20 @@
+# Basic 2 node deployment setup
+runLitpScript two-node-std.inc
+
+# firewall delete rule with tosource in it
+
+# Add firewall rules on node level
+litp create -t firewall-node-config -p /deployments/site1/clusters/cluster1/nodes/node1/configs/fw1
+litp create -t firewall-rule -p /deployments/site1/clusters/cluster1/nodes/node1/configs/fw1/rules/fw_validSNATNodeLevel -o provider=iptables name="903 SNAT" jump="SNAT" chain="POSTROUTING"  source="10.247.244.0/22" destination="10.140.1.0/24" proto=tcp tosource="10.140.1.56" table=nat
+
+litp create_plan
+litp run_plan
+
+# Delete firewall rules on node level
+litp remove -p /deployments/site1/clusters/cluster1/nodes/node1/configs/fw1/rules/fw_validSNATNodeLevel
+litp remove -p /deployments/site1/clusters/cluster1/nodes/node1/configs/fw1
+
+litp create_plan
+litp run_plan
+
+

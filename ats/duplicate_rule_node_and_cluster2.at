@@ -1,0 +1,14 @@
+# Basic 2 node deployment setup
+runLitpScript two-node-std.inc
+
+# Add a duplicate firewall rules on node1 and cluster
+litp create -p /deployments/site1/clusters/cluster1/configs/config -t firewall-cluster-config
+litp create -p /deployments/site1/clusters/cluster1/configs/config/rules/fw0024 -t firewall-rule -o name='021 elias'
+
+litp create -p /deployments/site1/clusters/cluster1/nodes/node1/configs/mynodefwconfig -t firewall-node-config
+litp create -p /deployments/site1/clusters/cluster1/nodes/node1/configs/mynodefwconfig/rules/fw0025 -t firewall-rule -o name='021 job'
+
+assertError create_plan
+let __err_a --err_message="Create plan failed: Position '21' in the firewall chain 'INPUT' is not unique on node 'node1'"
+let __err_b --err_message="Create plan failed: Position '21' in the firewall chain 'OUTPUT' is not unique on node 'node1'"
+assertError __err_a __err_b create_plan

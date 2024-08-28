@@ -1,0 +1,27 @@
+runLitpScript two-node-std.inc
+
+#1. Create a rule with just a number lower than 999 example "222"
+litp create -t firewall-node-config -p /ms/configs/fw_config
+litp create -t firewall-rule -p /ms/configs/fw_config/rules/fw_test_1 -o name="2222"
+
+#2. Create a rule with just a number higher than 999 example "1000"
+litp create -t firewall-rule -p /ms/configs/fw_config/rules/fw_test_2 -o name="1000"
+
+#3. Create a rule with a number higher than 999 and a name example "1000 test"
+litp create -t firewall-rule -p /ms/configs/fw_config/rules/fw_test_3 -o name="1000 test"
+
+#4. Create rule at node level and at cluster level with the same number and a different name example "222 node", "222 cluster"
+litp create -t firewall-cluster-config -p /deployments/site1/clusters/cluster1/configs/fw
+litp create -t firewall-rule -p /deployments/site1/clusters/cluster1/configs/fw/rules/fw_basetcp1  -o name="222 cluster"
+
+litp create -t firewall-node-config -p /deployments/site1/clusters/cluster1/nodes/node1/configs/fw1
+litp create -t firewall-rule -p /deployments/site1/clusters/cluster1/nodes/node1/configs/fw1/rules/fw_rule2  -o name="222 node"
+
+assertErrorMessage "Create plan failed: Position '222' in the firewall chain 'INPUT' is not unique on node 'node1'" create_plan
+assertErrorMessage "Create plan failed: Position '222' in the firewall chain 'OUTPUT' is not unique on node 'node1'" create_plan
+
+#5. Create rule at node level and at cluster level with the the following names: "2221 node", "2222 cluster"
+#cluster level
+litp create -t firewall-rule -p /deployments/site1/clusters/cluster1/configs/fw/rules/fw_cluster_rule2  -o name="2221 cluster"
+#node level
+litp create -t firewall-rule -p /deployments/site1/clusters/cluster1/nodes/node1/configs/fw1/rules/fw_rule3  -o name="2221 node"

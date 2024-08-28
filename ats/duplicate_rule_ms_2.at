@@ -1,0 +1,11 @@
+# Basic 2 node deployment setup
+runLitpScript two-node-std.inc
+
+# Add a duplicate firewall rules on ms
+litp create -p /ms/configs/fw_config -t firewall-node-config
+litp create -t firewall-rule -p /ms/configs/fw_config/rules/fw_test2 -o name="017 test2" dport="30000-65000" proto="udp" provider="iptables" source="11.45.239.84-11.45.239.85" destination="10.45.239.85"
+litp create -t firewall-rule -p /ms/configs/fw_config/rules/fw_test3 -o name="017 test3" dport="30000-65000" provider="iptables" proto="udp" source="12.45.239.84-12.45.239.91"
+
+let __err_a --err_message="Create plan failed: Position '17' in the firewall chain 'OUTPUT' is not unique on node 'ms1'"
+let __err_b --err_message="Create plan failed: Position '17' in the firewall chain 'INPUT' is not unique on node 'ms1'"
+assertError __err_a __err_b create_plan

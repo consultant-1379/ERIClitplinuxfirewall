@@ -1,0 +1,14 @@
+# Basic 2 node deployment setup
+runLitpScript two-node-std.inc
+
+# Add a firewall rules on cluster
+litp create -p /deployments/site1/clusters/cluster1/configs/fw -t firewall-cluster-config
+
+litp create -p /deployments/site1/clusters/cluster1/nodes/node1/configs/fw -t firewall-node-config
+
+litp create_plan
+#show show_plan
+litp run_plan
+
+assertFileContents puppet/node1_cluster_and_node_config_1.pp /opt/ericsson/nms/litp/etc/puppet/manifests/plugins/node1.pp
+assertFileContents puppet/node2_cluster_and_node_config_1.pp /opt/ericsson/nms/litp/etc/puppet/manifests/plugins/node2.pp

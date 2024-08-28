@@ -1,0 +1,31 @@
+# Basic 2 node deployment setup
+runLitpScript two-node-std.inc
+
+# Add a firewall configs on cluster
+litp create -t firewall-cluster-config -p /deployments/site1/clusters/cluster1/configs/fw_config
+litp create -t firewall-rule -p /deployments/site1/clusters/cluster1/configs/fw_config/rules/fw_rule1 -o provider=iptables name="903 rule" table=nat string="test_string" algo="kmp"
+
+litp create_plan
+assertTask 0 firewalls::rules node1 /deployments/site1/clusters/cluster1/configs/fw_config/rules/fw_rule1 Initial 'Add firewall rule "903 rule" on node "node1"'
+assertConfigTask node1 firewalls::rules cluster1_node1_fw_rule1 /deployments/site1/clusters/cluster1/configs/fw_config/rules/fw_rule1 rule3='{"name": "903 rule ipv6", "chain": "INPUT", "title": "903_rule_ipv6", "ensure": "absent", "algo": "kmp", "provider": "ip6tables", "action": "accept", "table": "nat", "string": "test_string"}' rule2='{"name": "1903 rule ipv4", "chain": "OUTPUT", "title": "1903_rule_ipv4", "ensure": "present", "algo": "kmp", "provider": "iptables", "action": "accept", "table": "nat", "string": "test_string"}' rule1='{"name": "903 rule ipv4", "chain": "INPUT", "title": "903_rule_ipv4", "ensure": "present", "algo": "kmp", "provider": "iptables", "action": "accept", "table": "nat", "string": "test_string"}' rule4='{"name": "1903 rule ipv6", "chain": "OUTPUT", "title": "1903_rule_ipv6", "ensure": "absent", "algo": "kmp", "provider": "ip6tables", "action": "accept", "table": "nat", "string": "test_string"}' 
+
+assertTask 0 firewalls::rules node2 /deployments/site1/clusters/cluster1/configs/fw_config/rules/fw_rule1 Initial 'Add firewall rule "903 rule" on node "node2"'
+assertConfigTask node2 firewalls::rules cluster1_node2_fw_rule1 /deployments/site1/clusters/cluster1/configs/fw_config/rules/fw_rule1 rule3='{"name": "903 rule ipv6", "chain": "INPUT", "title": "903_rule_ipv6", "ensure": "absent", "algo": "kmp", "provider": "ip6tables", "action": "accept", "table": "nat", "string": "test_string"}' rule2='{"name": "1903 rule ipv4", "chain": "OUTPUT", "title": "1903_rule_ipv4", "ensure": "present", "algo": "kmp", "provider": "iptables", "action": "accept", "table": "nat", "string": "test_string"}' rule1='{"name": "903 rule ipv4", "chain": "INPUT", "title": "903_rule_ipv4", "ensure": "present", "algo": "kmp", "provider": "iptables", "action": "accept", "table": "nat", "string": "test_string"}' rule4='{"name": "1903 rule ipv6", "chain": "OUTPUT", "title": "1903_rule_ipv6", "ensure": "absent", "algo": "kmp", "provider": "ip6tables", "action": "accept", "table": "nat", "string": "test_string"}' 
+
+litp run_plan
+
+# Add node configs
+litp create -p /deployments/site1/clusters/cluster1/nodes/node1/configs/fw -t firewall-node-config
+litp create -p /deployments/site1/clusters/cluster1/nodes/node1/configs/fw/rules/fw_rule1 -t firewall-rule -o name="002 basetcp" dport="22,80,111,443,3000,25151,9999" string="test_string" algo="kmp"
+
+litp create -p /deployments/site1/clusters/cluster1/nodes/node2/configs/fw -t firewall-node-config
+litp create -p /deployments/site1/clusters/cluster1/nodes/node2/configs/fw/rules/fw_rule1 -t firewall-rule -o name="002 basetcp" dport="22,80,111,443,3000,25151,9999" string="test_string" algo="bm"
+
+litp create_plan
+assertTask 0 firewalls::rules node1 /deployments/site1/clusters/cluster1/nodes/node1/configs/fw/rules/fw_rule1 Initial 'Add firewall rule "002 basetcp" on node "node1"'
+assertConfigTask node1 firewalls::rules _node1_fw_rule1 /deployments/site1/clusters/cluster1/nodes/node1/configs/fw/rules/fw_rule1 rule3='{"name": "002 basetcp ipv6", "chain": "INPUT", "title": "002_basetcp_ipv6", "proto": "tcp", "action": "accept", "state": ["NEW"], "ensure": "present", "algo": "kmp", "provider": "ip6tables", "dport": ["22", "80", "111", "443", "3000", "25151", "9999"], "string": "test_string"}' rule2='{"name": "1002 basetcp ipv4", "chain": "OUTPUT", "title": "1002_basetcp_ipv4", "proto": "tcp", "action": "accept", "state": ["NEW"], "ensure": "present", "algo": "kmp", "provider": "iptables", "dport": ["22", "80", "111", "443", "3000", "25151", "9999"], "string": "test_string"}' rule1='{"name": "002 basetcp ipv4", "chain": "INPUT", "title": "002_basetcp_ipv4", "proto": "tcp", "action": "accept", "state": ["NEW"], "ensure": "present", "algo": "kmp", "provider": "iptables", "dport": ["22", "80", "111", "443", "3000", "25151", "9999"], "string": "test_string"}' rule4='{"name": "1002 basetcp ipv6", "chain": "OUTPUT", "title": "1002_basetcp_ipv6", "proto": "tcp", "action": "accept", "state": ["NEW"], "ensure": "present", "algo": "kmp", "provider": "ip6tables", "dport": ["22", "80", "111", "443", "3000", "25151", "9999"], "string": "test_string"}'
+
+assertTask 0 firewalls::rules node2 /deployments/site1/clusters/cluster1/nodes/node2/configs/fw/rules/fw_rule1 Initial 'Add firewall rule "002 basetcp" on node "node2"'
+assertConfigTask node2 firewalls::rules _node2_fw_rule1 /deployments/site1/clusters/cluster1/nodes/node2/configs/fw/rules/fw_rule1 rule3='{"name": "002 basetcp ipv6", "chain": "INPUT", "title": "002_basetcp_ipv6", "proto": "tcp", "action": "accept", "state": ["NEW"], "ensure": "present", "algo": "bm", "provider": "ip6tables", "dport": ["22", "80", "111", "443", "3000", "25151", "9999"], "string": "test_string"}' rule2='{"name": "1002 basetcp ipv4", "chain": "OUTPUT", "title": "1002_basetcp_ipv4", "proto": "tcp", "action": "accept", "state": ["NEW"], "ensure": "present", "algo": "bm", "provider": "iptables", "dport": ["22", "80", "111", "443", "3000", "25151", "9999"], "string": "test_string"}' rule1='{"name": "002 basetcp ipv4", "chain": "INPUT", "title": "002_basetcp_ipv4", "proto": "tcp", "action": "accept", "state": ["NEW"], "ensure": "present", "algo": "bm", "provider": "iptables", "dport": ["22", "80", "111", "443", "3000", "25151", "9999"], "string": "test_string"}' rule4='{"name": "1002 basetcp ipv6", "chain": "OUTPUT", "title": "1002_basetcp_ipv6", "proto": "tcp", "action": "accept", "state": ["NEW"], "ensure": "present", "algo": "bm", "provider": "ip6tables", "dport": ["22", "80", "111", "443", "3000", "25151", "9999"], "string": "test_string"}'
+
+litp run_plan

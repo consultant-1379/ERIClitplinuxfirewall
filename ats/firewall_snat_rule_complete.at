@@ -1,0 +1,44 @@
+# Basic 2 node deployment setup
+runLitpScript two-node-std.inc
+
+litp create -t firewall-node-config -p /deployments/site1/clusters/cluster1/nodes/node1/configs/fw_config
+litp create -t firewall-node-config -p /deployments/site1/clusters/cluster1/nodes/node2/configs/fw_config
+litp create -t firewall-node-config -p /ms/configs/fw_config
+
+litp create_plan
+litp run_plan
+
+# Add firewall rules on node, cluster and ms level
+
+# IPV4
+# Add firewall rules on cluster level ipv4
+litp create -t firewall-cluster-config -p /deployments/site1/clusters/cluster1/configs/fw_config
+litp create -t firewall-rule -p /deployments/site1/clusters/cluster1/configs/fw_config/rules/fw_validSNAT -o provider=iptables name="903 SNAT" jump="SNAT" chain="POSTROUTING" destination="10.140.1.0/24" proto=tcp tosource="10.140.1.56" table=nat
+
+litp create_plan
+# Assert rule tasks were created
+assertTask 0 firewalls::rules node1 /deployments/site1/clusters/cluster1/configs/fw_config/rules/fw_validSNAT Initial 'Add firewall rule "903 SNAT" on node "node1"'
+assertTask 0 firewalls::rules node2 /deployments/site1/clusters/cluster1/configs/fw_config/rules/fw_validSNAT Initial 'Add firewall rule "903 SNAT" on node "node2"'
+litp run_plan
+
+# Add firewall rules on node level - tcp ipv4
+litp create -t firewall-rule -p /deployments/site1/clusters/cluster1/nodes/node1/configs/fw_config/rules/fw_validSNATNodeLevel -o provider=iptables name="904 SNAT" jump="SNAT" chain="POSTROUTING"  source="10.247.244.0/22" destination="10.140.1.0/24" proto=tcp tosource="10.140.1.56" table=nat
+litp create_plan
+litp show_plan
+# Assert rule tasks were created
+assertTask 0 firewalls::rules node1 /deployments/site1/clusters/cluster1/nodes/node1/configs/fw_config/rules/fw_validSNATNodeLevel Initial 'Add firewall rule "904 SNAT" on node "node1"'
+litp run_plan
+
+# Add firewall rules on node level - udp ipv4
+litp create -t firewall-rule -p /deployments/site1/clusters/cluster1/nodes/node1/configs/fw_config/rules/fw_validSNATNodeLevel2 -o provider=iptables name="905 SNAT" jump="SNAT" chain="POSTROUTING"  source="10.247.244.0/22" destination="10.140.1.0/24" proto=udp tosource="10.140.1.56" table=nat
+litp create_plan
+# Assert rule tasks were created
+assertTask 0 firewalls::rules node1 /deployments/site1/clusters/cluster1/nodes/node1/configs/fw_config/rules/fw_validSNATNodeLevel2 Initial 'Add firewall rule "905 SNAT" on node "node1"'
+litp run_plan
+
+# Add firewall rules on node level on ms ipv4
+litp create -t firewall-rule -p /ms/configs/fw_config/rules/fw_test1 -o provider=iptables name="906 SNAT" jump="SNAT" chain="POSTROUTING"  source="10.247.244.0/22" destination="10.140.1.0/24" proto=tcp tosource="10.140.1.56" table=nat
+litp create_plan
+# Assert rule tasks were created
+assertTask 0 firewalls::rules ms1 /ms/configs/fw_config/rules/fw_test1 Initial 'Add firewall rule "906 SNAT" on node "ms1"'
+litp run_plan

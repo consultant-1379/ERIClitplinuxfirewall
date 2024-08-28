@@ -1,0 +1,22 @@
+# Basic 2 node deployment setup
+runLitpScript two-node-std.inc
+
+# Add a duplicate firewall rules on cluster
+litp create -p /deployments/site1/clusters/cluster1/configs/fw -t firewall-cluster-config
+litp create -p /deployments/site1/clusters/cluster1/configs/fw/rules/fw_basetcp1 -t firewall-rule -o name="001 basetcp" dport="22,80,111,443,3000,25151,9999"
+litp create -p /deployments/site1/clusters/cluster1/configs/fw/rules/fw_basetcp2 -t firewall-rule -o name="001 basetcp" dport="22,80,111,443,3000,25151,9999"
+
+let __err_a --err_path = "/deployments/site1/clusters/cluster1/configs/fw/rules/fw_basetcp1" --err_message="Create plan failed: Position '1' in the firewall chain 'INPUT' is not unique on cluster 'cluster1'"
+let __err_b --err_path = "/deployments/site1/clusters/cluster1/configs/fw/rules/fw_basetcp2" --err_message="Create plan failed: Position '1' in the firewall chain 'INPUT' is not unique on cluster 'cluster1'"
+let __err_c --err_path = "/deployments/site1/clusters/cluster1/configs/fw/rules/fw_basetcp1" --err_message="Create plan failed: Position '1' in the firewall chain 'OUTPUT' is not unique on cluster 'cluster1'"
+let __err_d --err_path = "/deployments/site1/clusters/cluster1/configs/fw/rules/fw_basetcp2" --err_message="Create plan failed: Position '1' in the firewall chain 'OUTPUT' is not unique on cluster 'cluster1'"
+let __err_e --err_path = "/deployments/site1/clusters/cluster1/configs/fw/rules/fw_basetcp1" --err_message="Create plan failed: Position '1' in the firewall chain 'INPUT' is not unique on node 'node1'"
+let __err_f --err_path = "/deployments/site1/clusters/cluster1/configs/fw/rules/fw_basetcp2" --err_message="Create plan failed: Position '1' in the firewall chain 'INPUT' is not unique on node 'node1'"
+let __err_g --err_path = "/deployments/site1/clusters/cluster1/configs/fw/rules/fw_basetcp1" --err_message="Create plan failed: Position '1' in the firewall chain 'OUTPUT' is not unique on node 'node1'"
+let __err_h --err_path = "/deployments/site1/clusters/cluster1/configs/fw/rules/fw_basetcp2" --err_message="Create plan failed: Position '1' in the firewall chain 'OUTPUT' is not unique on node 'node1'"
+let __err_i --err_path = "/deployments/site1/clusters/cluster1/configs/fw/rules/fw_basetcp1" --err_message="Create plan failed: Position '1' in the firewall chain 'INPUT' is not unique on node 'node2'"
+let __err_j --err_path = "/deployments/site1/clusters/cluster1/configs/fw/rules/fw_basetcp2" --err_message="Create plan failed: Position '1' in the firewall chain 'INPUT' is not unique on node 'node2'"
+let __err_k --err_path = "/deployments/site1/clusters/cluster1/configs/fw/rules/fw_basetcp1" --err_message="Create plan failed: Position '1' in the firewall chain 'OUTPUT' is not unique on node 'node2'"
+let __err_l --err_path = "/deployments/site1/clusters/cluster1/configs/fw/rules/fw_basetcp2" --err_message="Create plan failed: Position '1' in the firewall chain 'OUTPUT' is not unique on node 'node2'"
+
+assertError --errors_length 12 __err_a __err_b __err_c __err_d __err_e __err_f __err_g __err_h __err_i __err_j __err_k __err_l create_plan

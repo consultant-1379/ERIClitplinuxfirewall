@@ -1,0 +1,23 @@
+##Test negative scenario at removal of a firewall rule
+##
+
+# Basic 2 node deployment setup
+runLitpScript two-node-std.inc
+
+# Initial config and rule
+litp create -t firewall-cluster-config -p /deployments/site1/clusters/cluster1/configs/fw1
+litp create -t firewall-rule -p /deployments/site1/clusters/cluster1/configs/fw1/rules/fw019 -o name="190 test19" proto="tcp" action="accept" sport="1123" dport="655" state="NEW" source="129.167.122.99" destination="129.167.122.99" provider="iptables"
+
+# Create and run plan
+litp create_plan
+litp run_plan
+assertPlanState successful
+
+# Remove rule
+assertError --err_type "InvalidLocationError" --err_message "Path not found" --err_vpath "/deployments/site1/clusters/cluster1/configs/fw1/rules/fw019a" remove -p /deployments/site1/clusters/cluster1/configs/fw1/rules/fw019a
+litp remove -p /deployments/site1/clusters/cluster1/configs/fw1/rules/fw019
+assertState -p /deployments/site1/clusters/cluster1/configs/fw1/rules/fw019 ForRemoval
+
+# Remove rule again
+litp remove -p /deployments/site1/clusters/cluster1/configs/fw1/rules/fw019
+assertState -p /deployments/site1/clusters/cluster1/configs/fw1/rules/fw019 ForRemoval

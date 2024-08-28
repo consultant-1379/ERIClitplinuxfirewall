@@ -1,0 +1,13 @@
+# Basic 2 node deployment setup
+runLitpScript two-node-std.inc
+
+litp create -p /ms/configs/fw -t firewall-node-config
+# Add one firewall to INPUT chain
+litp create -p /ms/configs/fw/rules/fw_rule1 -t firewall-rule -o name="1 rule" chain=OUTPUT sport="9999"
+# Add one deprecated firewall to OUTPUT chain
+litp create -p /ms/configs/fw/rules/fw_rule2 -t firewall-rule -o name="1001 rule" chain=INPUT sport="9999"
+let __err_a --err_vpath=/ms/configs/fw/rules/fw_rule1 --err_message="Position '1' in the 'OUTPUT' chain conflicts with position '1001' in the 'INPUT' chain on node 'ms1'"
+let __err_b --err_vpath=/ms/configs/fw/rules/fw_rule2 --err_message="Position '1001' in the 'INPUT' chain conflicts with position '1' in the 'OUTPUT' chain on node 'ms1'"
+assertError __err_a __err_b create_plan
+
+

@@ -1,0 +1,12 @@
+# Basic 2 node deployment setup
+runLitpScript two-node-std.inc
+
+# modify firewall rules
+litp create -t firewall-node-config -p /ms/configs/fw_config
+litp create -t firewall-rule -p /ms/configs/fw_config/rules/fw_test2 -o provider=iptables name="903 SNAT" jump="SNAT" chain="POSTROUTING"  source="10.247.244.0/22" destination="10.140.1.0/24" tosource="10.140.1.56" proto=tcp table=nat
+litp create_plan
+litp run_plan
+
+litp update -p /ms/configs/fw_config/rules/fw_test2 -o tosource="10.140.1.57"
+litp create_plan
+litp run_plan
